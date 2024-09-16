@@ -6,5 +6,5 @@
 * You may need to run examples with a flag to enable the proper package resolution mechanism, for instance:
 
 ```sh
-node --es-module-specifier-resolution=node ./es/verifyVP.js
+node --loader=extensionless ./es/verifyVP.js
 ```

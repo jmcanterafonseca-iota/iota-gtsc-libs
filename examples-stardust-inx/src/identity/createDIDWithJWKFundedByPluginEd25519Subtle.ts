@@ -37,23 +37,12 @@ async function run() {
     }
 
     const theKey = await subtle.generateKey("Ed25519", true, ["sign", "verify"]);
-
-    const exported = await subtle.exportKey("pkcs8",
-        (theKey as unknown as { [id: string]: unknown }).privateKey as CryptoKey);
-    console.log("-----BEGIN PRIVATE KEY-----");
-    console.log(Buffer.from(exported).toString("base64"));
-    console.log("-----END PRIVATE KEY-----");
-
-    const exported2 = await subtle.exportKey("spki",
-        (theKey as unknown as { [id: string]: unknown }).publicKey as CryptoKey);
-    console.log("-----BEGIN PUBLIC KEY-----");
-    console.log(Buffer.from(exported2).toString("base64"));
-    console.log("-----END PUBLIC KEY-----");
-
+    const privateKey = (theKey as unknown as { [id: string]: unknown }).privateKey as CryptoKey;
+    const publicKey = (theKey as unknown as { [id: string]: unknown }).publicKey as CryptoKey;
 
     // const pubKey = key.toObject(false);
-    const pubKey = await subtle.exportKey("jwk",  (theKey as unknown as { [id: string]: unknown }).publicKey as CryptoKey);
-    const pubKeyAsJose =  await JWK.fromObject(pubKey as JWKObject);
+    const pubKey = await subtle.exportKey("jwk", publicKey);
+    const pubKeyAsJose = await JWK.fromObject(pubKey as JWKObject);
     const kid = await pubKeyAsJose.getThumbprint();
 
     // This DID Document can also be created with the help of the IOTA Identity Library
@@ -67,20 +56,27 @@ async function run() {
         }]
     };
 
-    did.verificationMethod[0].publicKeyJwk = pubKeyAsJose.toObject(false);
+    did.verificationMethod[0].publicKeyJwk = {
+        ...pubKeyAsJose.toObject(false),
+        kid
+    };
+
+    delete did.verificationMethod[0].publicKeyJwk["key_ops"];
+    did.verificationMethod[0].publicKeyJwk["use"] = "sig";
+
+    console.log(did.verificationMethod[0].publicKeyJwk);
 
     // Posting data to the plugin
     const result = await postToPlugin(did, bech32Addresses);
 
 
-    const privateKey = await subtle.exportKey("jwk",  (theKey as unknown as { [id: string]: unknown }).privateKey as CryptoKey);
-    const privateKeyAsJose =  await JWK.fromObject(privateKey as JWKObject);
+    const privateKeyAsJsonWebToken = await subtle.exportKey("jwk", (theKey as unknown as { [id: string]: unknown }).privateKey as CryptoKey);
+    const privateKeyAsJose = await JWK.fromObject(privateKeyAsJsonWebToken as JWKObject);
     const kidPrivate = await privateKeyAsJose.getThumbprint();
 
     const privateKeyObj = privateKeyAsJose.toObject(true);
     privateKeyObj.kid = `${kidPrivate}`;
 
-    
     console.log("Private Key of the Verification Method: ");
     console.log(JSON.stringify(privateKeyObj, undefined, 2));
     console.log();
@@ -93,6 +89,16 @@ async function run() {
 
     const publicKeyRaw = Buffer.from(pubKey.x, "base64");
     console.log("Raw public key: ", Converter.bytesToHex(publicKeyRaw, true));
+
+    const exported = await subtle.exportKey("pkcs8", privateKey);
+    console.log("-----BEGIN PRIVATE KEY-----");
+    console.log(Buffer.from(exported).toString("base64"));
+    console.log("-----END PRIVATE KEY-----");
+
+    const exported2 = await subtle.exportKey("spki", publicKey);
+    console.log("-----BEGIN PUBLIC KEY-----");
+    console.log(Buffer.from(exported2).toString("base64"));
+    console.log("-----END PUBLIC KEY-----");
 }
 
 
