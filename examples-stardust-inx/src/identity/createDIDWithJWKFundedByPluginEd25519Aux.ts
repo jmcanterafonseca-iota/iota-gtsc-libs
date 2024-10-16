@@ -1,16 +1,16 @@
-import { generateAddresses } from "../utilAddress";
+// import { generateAddresses } from "../utilAddress";
 
-import { post, type FullDoc } from "../utilHttp";
+// import { post, type FullDoc } from "../utilHttp";
 
 import * as dotenv from "dotenv";
 import * as dotenvExpand from "dotenv-expand";
-import { JWK, type JWKObject } from "ts-jose";
+import { JWK } from "ts-jose";
 const theEnv = dotenv.config();
 dotenvExpand.expand(theEnv);
 
-import { Converter } from "@iota/util.js";
+// import { Converter } from "@iota/util.js";
 
-const { NODE_ENDPOINT, PLUGIN_ENDPOINT, TOKEN } = process.env;
+// const { PLUGIN_ENDPOINT, TOKEN } = process.env;
 
 const { subtle } = globalThis.crypto;
 
@@ -20,7 +20,7 @@ async function run() {
     // The account #0 will be controlling the DID
     // The account #1 will be the verification method
     // Write the key pairs to the std output
-    const { bech32Addresses } = await generateAddresses(NODE_ENDPOINT, TOKEN, 1);
+    // const { bech32Addresses } = await generateAddresses(NODE_ENDPOINT, TOKEN, 1);
 
     // Now the JWK is generated and its public key just copied to the DID and the Private Key printed to stdout
     let key: JWK = await JWK.generate("EdDSA", {
@@ -42,10 +42,29 @@ async function run() {
         process.exit(-1);
     }
 
-    const theKey = await subtle.generateKey("Ed25519", true, ["sign", "verify"]);
-    const privateKey = (theKey as unknown as { [id: string]: unknown }).privateKey as CryptoKey;
-    const publicKey = (theKey as unknown as { [id: string]: unknown }).publicKey as CryptoKey;
+    // const theKey = await subtle.generateKey("Ed25519", true, ["sign", "verify"]);
+    const theKey = await subtle.importKey("jwk",
+        {
+            "key_ops": [
+                "sign"
+            ],
+            "ext": true,
+            "crv": "Ed25519",
+            "d": "-8r2yxLzJmv2EehB8o2zm-s-3QQKNWXLuJhgXP-kYMM",
+            "x": "qjTxYOYLHNzOj4vlxrIxzaDjDt2Ag-3AUOLLlWJKzVs",
+            "kty": "OKP",
+            "kid": "uXzLJyKfcEUGu2_Si6npNukkt3bnxyZk7ViLAca3LO4",
+            "alg": "EdDSA",
+            "use": "sig"
+        } as JsonWebKey,
+        { name: "Ed25519" }, true, ["sign"]
+    );
 
+    console.log(theKey);
+
+    //const privateKey = (theKey as unknown as { [id: string]: unknown }).privateKey as CryptoKey;
+    //const publicKey = (theKey as unknown as { [id: string]: unknown }).publicKey as CryptoKey;
+/*
     // const pubKey = key.toObject(false);
     const pubKey = await subtle.exportKey("jwk", publicKey);
     const pubKeyAsJose = await JWK.fromObject(pubKey as JWKObject);
@@ -94,19 +113,20 @@ async function run() {
 
     const publicKeyRaw = Buffer.from(pubKey.x, "base64");
     console.log("Raw public key: ", Converter.bytesToHex(publicKeyRaw, true));
+    */
 
-    const exported = await subtle.exportKey("pkcs8", privateKey);
+    const exported = await subtle.exportKey("pkcs8", theKey);
     console.log("-----BEGIN PRIVATE KEY-----");
     console.log(Buffer.from(exported).toString("base64"));
     console.log("-----END PRIVATE KEY-----");
 
-    const exported2 = await subtle.exportKey("spki", publicKey);
+    const exported2 = await subtle.exportKey("spki", theKey);
     console.log("-----BEGIN PUBLIC KEY-----");
     console.log(Buffer.from(exported2).toString("base64"));
     console.log("-----END PUBLIC KEY-----");
 }
 
-
+/*
 async function postToPlugin(did: { [id: string]: unknown }, bech32Addresses: string[]): Promise<FullDoc> {
     const pluginRequest = {
         type: "DIDCreation",
@@ -122,6 +142,7 @@ async function postToPlugin(did: { [id: string]: unknown }, bech32Addresses: str
 
     return result as FullDoc;
 }
+    */
 
 export { };
 
