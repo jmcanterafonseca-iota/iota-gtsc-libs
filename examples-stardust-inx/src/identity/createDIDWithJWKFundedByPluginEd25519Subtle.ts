@@ -20,7 +20,7 @@ async function run() {
     // The account #0 will be controlling the DID
     // The account #1 will be the verification method
     // Write the key pairs to the std output
-    const { bech32Addresses } = await generateAddresses(NODE_ENDPOINT, TOKEN, 1);
+    const { bech32Addresses, privateKeys } = await generateAddresses(NODE_ENDPOINT, TOKEN, 1);
 
     // Now the JWK is generated and its public key just copied to the DID and the Private Key printed to stdout
     let key: JWK = await JWK.generate("EdDSA", {
@@ -104,6 +104,16 @@ async function run() {
     console.log("-----BEGIN PUBLIC KEY-----");
     console.log(Buffer.from(exported2).toString("base64"));
     console.log("-----END PUBLIC KEY-----");
+
+    const finalObject = {
+            "did": result.doc["id"],
+            "privateKeyDidControl": Converter.bytesToHex(privateKeys[0], true),
+            "privateKeyJwk": privateKeyObj,
+            "privateKeyVerificationMethodRaw": Converter.bytesToHex(privateKeyRaw, true),
+            "publicKeyVerificationMethodRaw": Converter.bytesToHex(publicKeyRaw, true)
+    }
+
+    console.log(JSON.stringify(finalObject, undefined, 2));
 }
 
 
