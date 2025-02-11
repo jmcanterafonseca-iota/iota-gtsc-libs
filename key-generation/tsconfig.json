@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "es2020",
+    "moduleResolution": "node",
+    "lib": [
+      "dom",
+      "es2015",
+      "es2015.iterable"
+    ],
+    "esModuleInterop": true,
+    "noUnusedLocals": true,
+    "outDir": "./es",
+    "resolveJsonModule": true,
+    "inlineSourceMap": true,
+    "declaration": true,
+    "declarationDir": "typings",
+    "stripInternal": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
+    "importsNotUsedAsValues": "error",
+    "preserveValueImports": true,
+    "isolatedModules": true,
+    "allowJs": true
+  },
+  "include": [
+    "src"
+  ]
+}

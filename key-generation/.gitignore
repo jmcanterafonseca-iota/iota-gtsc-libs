@@ -1,0 +1,11 @@
+es
+endpoint.ts
+tao_es_gov.json
+tao_es_gov.jwt
+credential.json
+legal-entity.json
+presentation.json
+
+.env.test
+.env.local
+*.pem
